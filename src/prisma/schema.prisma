@@ -1,0 +1,124 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String    @id @default(uuid())
+  name     String
+  email    String
+  password String
+  listing  Listing[]
+  role     Role      @default(Customer)
+  Booking  Booking[]
+  Reviews  Reviews[]
+  Units    Units[]
+}
+
+enum Role {
+  Admin
+  Customer
+  Vender
+}
+
+model Listing {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  address     String
+  description String
+  price       Int
+  Facilities  String
+  images      String
+  VenderId    String
+  Vender      User      @relation(fields: [VenderId], references: [id])
+  type        Type
+  Units       Units[]
+  review      Reviews[]
+}
+
+enum Type {
+  Hotal
+  Restaurant
+  Both
+}
+
+model Units {
+  id           String        @id @default(uuid())
+  ListingId    String
+  Listing      Listing       @relation(fields: [ListingId], references: [id])
+  venderId     String
+  Vender       User          @relation(fields: [venderId], references: [id])
+  booking_type booking_type
+  price        Int
+  status       BookingStatus @default(Available)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  Bookings     Booking[]
+}
+
+enum booking_type {
+  Single
+  Double
+  Triple
+  Family
+}
+
+enum BookingStatus {
+  Available
+  Occupied
+  Maintenance
+}
+
+model Booking {
+  id         String   @id @default(uuid())
+  name       String
+  CustomerId String
+  Customer   User     @relation(fields: [CustomerId], references: [id])
+  unitid     String
+  unit       Units    @relation(fields: [unitid], references: [id])
+  status     Status   @default(Pending)
+  date       String
+  slot       Slot?
+  guests     Int
+  pack       Pack     @default(Gold)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+enum Slot {
+  Morning
+  Afternoon
+  Evening
+  Night
+}
+
+enum Status {
+  Pending
+  confirmed
+  Failed
+}
+
+enum Pack {
+  Gold
+  Platinum
+}
+
+model Reviews {
+  id         String  @id @default(uuid())
+  customerId String
+  rating     String
+  message    String
+  Customer   User    @relation(fields: [customerId], references: [id])
+  Listing    Listing @relation(fields: [listingId], references: [id])
+  listingId  String
+}
